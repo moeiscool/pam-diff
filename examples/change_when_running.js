@@ -1,6 +1,8 @@
 'use strict';
 
-console.time('=====> testing pam diffs with 4 regions set');
+process.env.NODE_ENV = 'development';
+
+console.time('=====> testing rgb pam diffs with 2 region masks set');
 
 const assert = require('assert');
 
@@ -8,21 +10,23 @@ const P2P = require('pipe2pam');
 
 const PamDiff = require('../index');
 
+const ffmpegPath = require('ffmpeg-static').path;
+
 const spawn = require('child_process').spawn;
 
-const pamCount = 10;
+const pamCount = 100;
 
 let pamCounter = 0;
 
 let pamDiffCounter = 0;
 
-const pamDiffResults = [17, 18, 16, 16, 16, 15, 18, 17, 15];
+const pamDiffResults = [13, 14, 13, 13, 13, 12, 14, 13, 12];
 
 const params = [
     /* log info to console */
     '-loglevel',
     'quiet',
-    '-stats',
+    //'-stats',
     
     /* use an artificial video input */
     '-re',
@@ -56,20 +60,17 @@ const region1 = {name: 'region1', difference: 1, percent: 1, polygon: [{x: 0, y:
 
 const region2 = {name: 'region2', difference: 1, percent: 1, polygon: [{x: 100, y: 0}, {x: 100, y: 225}, {x: 200, y: 225}, {x: 200, y: 0}]};
 
-const region3 = {name: 'region3', difference: 1, percent: 1, polygon: [{x: 200, y: 0}, {x: 200, y: 225}, {x: 300, y: 225}, {x: 300, y: 0}]};
+const regions = [region1, region2];
 
-const region4 = {name: 'region4', difference: 1, percent: 1, polygon: [{x: 300, y: 0}, {x: 300, y: 225}, {x: 400, y: 225}, {x: 400, y: 0}]};
-
-const regions = [region1, region2, region3, region4];
-
-const pamDiff = new PamDiff({grayscale: 'luminosity', regions : regions});
+const pamDiff = new PamDiff({mask: true, regions : regions});
 
 pamDiff.on('diff', (data) => {
-    assert(data.trigger[3].name === 'region4', 'trigger name is not correct');
-    assert(data.trigger[3].percent === pamDiffResults[pamDiffCounter++], 'trigger percent is not correct');
+    console.log(data);
+    //assert(data.trigger[0].name === 'mask', 'trigger name is not correct');
+    //assert(data.trigger[0].percent === pamDiffResults[pamDiffCounter++], 'trigger percent is not correct');
 });
 
-const ffmpeg = spawn('ffmpeg', params, {stdio: ['ignore', 'pipe', 'inherit']});
+const ffmpeg = spawn(ffmpegPath, params, {stdio: ['ignore', 'pipe', 'inherit']});
 
 ffmpeg.on('error', (error) => {
     console.log(error);
@@ -78,7 +79,23 @@ ffmpeg.on('error', (error) => {
 ffmpeg.on('exit', (code, signal) => {
     assert(code === 0, `FFMPEG exited with code ${code} and signal ${signal}`);
     assert(pamDiffCounter === pamCount - 1, `did not get ${pamCount - 1} pam diffs`);
-    console.timeEnd('=====> testing pam diffs with 4 regions set');
+    console.timeEnd('=====> testing rgb pam diffs with 2 region masks set');
 });
 
 ffmpeg.stdout.pipe(p2p).pipe(pamDiff);
+
+setTimeout(()=>{
+    console.log(1);
+    pamDiff.resetCache();
+
+}, 10000);
+
+setTimeout(()=>{
+    console.log(2);
+    pamDiff.mask = false;
+}, 20000);
+
+setTimeout(()=>{
+    console.log(3);
+    pamDiff.regions = null;
+}, 30000);

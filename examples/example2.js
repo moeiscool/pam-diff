@@ -1,7 +1,10 @@
 'use strict';
 
+process.env.NODE_ENV = 'development';
+
 const P2P = require('pipe2pam');
 const PamDiff = require('../index');
+const ffmpegPath = require('ffmpeg-static').path;
 const ChildProcess = require('child_process');
 const spawn = ChildProcess.spawn;
 const execFile = ChildProcess.execFile;
@@ -15,11 +18,11 @@ const params = [
     'auto',//vda, videotoolbox, none, auto
 
     /* use an artificial video input */
-    '-re',
-     '-f',
-     'lavfi',
-     '-i',
-     'testsrc=size=1920x1080:rate=15',
+    //'-re',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc=size=1920x1080:rate=15',
 
     /* use an rtsp ip cam video input */
     /*'-rtsp_transport',
@@ -41,11 +44,11 @@ const params = [
     'fps=2,scale=400:225',//1920:1080 scaled down = 640:360, 400:225, 384:216, 368:207, 352:198, 336:189, 320:180
     //'fps=1,scale=iw*1/6:ih*1/6',
     '-frames',
-    '1000',
+    '100',
     'pipe:1'
 ];
 
-const ffmpeg = spawn('ffmpeg', params, {
+const ffmpeg = spawn(ffmpegPath, params, {
     stdio: ['ignore', 'pipe', 'ignore']
 });
 
@@ -72,7 +75,7 @@ const region1 = {name: 'region1', difference: 1, percent: 1, polygon: [{x: 0, y:
 
 const regions = [region1];
 
-const pamDiff = new PamDiff({grayscale: 'luminosity', regions : regions});
+const pamDiff = new PamDiff({regions : regions});
 
 pamDiff.on('diff', (data) => {
     console.log(data);

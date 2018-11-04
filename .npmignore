@@ -2,12 +2,9 @@
 node_modules/
 examples/
 tests/
+docs/
+build/
 .travis.yml
 appveyor.yml
 .jshintrc
 pam-diff.iml
-build/
-libs/
-binding.gyp
-index2.js
-indexTest.js
